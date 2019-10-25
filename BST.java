@@ -1,39 +1,8 @@
 import java.lang.*;
-import java.util.*;
 
-public class BST <Comparable>{
+public class BST <T>{
 
     protected Node root;
-    public Comparator<Comparable> comparator = new Comparator<Comparable>() { // COMPARING PROBLEM - HASHCODE DOES NOT WORK
-        // try figuring out implementing comparable or try testing to see what object item is, casting it, then comparing
-        @Override
-        public int compare(Comparable o1, Comparable o2) {
-            if(o1 == o2){
-                return 0;
-            } else if(o1 instanceof String) {
-                return ((String)o1).compareTo((String)o2);
-            } else if(o1 instanceof Integer) {
-                return ((Integer) o1).compareTo((Integer) o2);
-            } else if(o1 instanceof Float) {
-                return ((Float)o1).compareTo((Float)o2);
-            } else if(o1 instanceof Double) {
-                return ((Double)o1).compareTo((Double)o2);
-            } else if(o1 instanceof Short) {
-                return ((Short)o1).compareTo((Short)o2);
-            } else if(o1 instanceof Long) {
-                return ((Long)o1).compareTo((Long)o2);
-            } else if(o1 instanceof Character) {
-                return ((Character)o1).compareTo((Character) o2);
-            } else if(o1 instanceof Boolean) {
-                return ((Boolean)o1).compareTo((Boolean) o2);
-            } else {
-                return 0;
-            }
-
-            // keep adding more until all wrapper classes covered??
-        }
-    };
-
 
     public BST(){
         root = null;
@@ -42,7 +11,7 @@ public class BST <Comparable>{
     class Node{
         public Comparable data;
         public Node left, right;
-        public int instanceCounter;
+        public int instanceCounter; // counts number of times an item appears in the tree
 
         // constructor with no parameters, sets the data and next to null
         public Node(){
@@ -57,7 +26,7 @@ public class BST <Comparable>{
             data = item;
             right = null;
             left = null;
-            instanceCounter = 1;
+            instanceCounter = 1; // when the node is created, there is one instance of the data
         }
 
         // getters:
@@ -90,87 +59,79 @@ public class BST <Comparable>{
             left = n;
         }
 
-        public void setInstanceCounter(int count) {
-            instanceCounter = count;
+        public void setInstanceCounter() {
+            instanceCounter++;
         }
     }
 
-
+    // Returns true if item is found in the tree and false otherwise.
     public boolean find(Comparable item){
         return find(item, root);
-        // Return true if item is found in the BST; false otherwise.
     }
 
+    // recursive find function
     private boolean find(Comparable item, Node node){
         if(node == null){
             return false; // item does not exist in our tree
         }
         if(item.equals(node.data)){
-            return true;
+            return true; // we have found the node
         }
-        if(comparator.compare(node.data, item) > 0){
+        if(node.data.compareTo(item) > 0){ // if the item < node, search to the left
             return find(item, node.left);
         } else {
-            return find(item, node.right);
+            return find(item, node.right); // if item > node, search to the right
         }
     }
 
+    // Inserts the item into the tree
     public void insert(Comparable item){
         root = insert(item, root);
-        // Insert item into BST, keeping duplicates in their own nodes.
     }
 
-    private Node insert(Comparable item, Node node){        // problems with insert
-        if(node == null ){  //|| node.data == null){
+    private Node insert(Comparable item, Node node){
+        if(node == null ){ // reached the end of the tree so time to add the node and return it to reestablish all of the links
             return new Node(item);
         }
-        if(item.equals(node.data)){
+        if(item.equals(node.data)){ // if the new item is the same value as a node then increase the instance counter
             node.instanceCounter++;
             return node;
         }
-        //System.out.println(node.data);
-        //System.out.println(item);
-        if(comparator.compare(item, node.data) < 0){
-            node.left = insert(item, node.left); // do we return node.left and right here?
-            return node;
-        } else {
+        if(item.compareTo(node.data) < 0){ // if the item is less than the current node, add to the left
+            node.left = insert(item, node.left);
+            return node; // return the current node after adding to the left, reestablishes the links between nodes
+        } else { // if the item > node, add to the right
             node.right = insert(item, node.right);
             return node;
         }
-        // Insert item into BST, keeping duplicates in their own nodes.
     }
 
+    // prints all of the data in the tree in order
     public void print(){
-        print(root);// should just be print root? then inside print go left and right
-//        print(root.left);
-//        for(int i = 1; i<=root.instanceCounter; i++){
-//            System.out.println(root.data);
-//        }
-//        print(root.right);
-
-        //  Using println, output each item in the BST, ​in order​.
+        print(root);
     }
 
+    // prints all of the nodes to the left, the current node, then all of the nodes to the right
     private void print(Node node){
-        if(node != null){
-            print(node.left);
-            for(int i=1; i<= node.instanceCounter; i++){
+        if(node != null){ // if the node is null then don't print anything
+            print(node.left); // prints nodes to the left
+            for(int i=1; i <= node.instanceCounter; i++){ // prints out all of the duplicates
                 System.out.println(node.data);
             }
-            print(node.right);
+            print(node.right); // prints nodes to the right
         }
     }
 
+    // delete first instance of the item from the BST
     public void delete(Comparable item){
-        // delete first instance of the item from the BST
         root = delete(root, item);
     }
 
     public Node delete(Node node, Comparable item){
-        if(node==null){
+        if(node==null){ // if the node does not exist in the tree
             return null;
         }
-        if(node.data.equals(item)) {             // some way to account for the deletion of duplicates - if node.data && instance == 1 else just return node?
+        if(node.data.equals(item) && node.instanceCounter == 1) { // if it is the correct node and there is only one instance
             if (node.left == null) {
                 return node.right;
             }
@@ -185,22 +146,27 @@ public class BST <Comparable>{
                 node.data = removesmallest(node.right);
                 return node;
             }
+        } else if(node.instanceCounter > 1){
+            // if the instance counter is more than one, then do not need to delete entire node, just one instance
+            node.instanceCounter--;
+            return node;
         }
-        if(comparator.compare(node.data, item) < 0){
+        if(node.data.compareTo(item) < 0){ // if the item is greater than the current node, then recursive call
             node.right = delete(node.right, item);
             return node;
-        } else {
+        } else { // if item < current node, then recursive call
             node.left = delete(node.left, item);
             return node;
         }
     }
 
+    // used for the delete function, returns the data of the smallest in-order successor
     private Comparable removesmallest(Node node){
-        if(node.left.left == null){
+        if(node.left.left == null){ // if the left's node's left node is null, then the left node must be the smallest
             Comparable smallest = node.left.data;
             node.left = node.left.right;
             return smallest;
         }
-        return removesmallest(node.left);
+        return removesmallest(node.left); // if the left node is not the smallest
     }
 }
